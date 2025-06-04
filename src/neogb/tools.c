@@ -19,6 +19,7 @@
 
 
 #include "tools.h"
+#include <sys/stat.h>
 
 /* cpu time */
 double cputime(void)
@@ -32,10 +33,53 @@ double cputime(void)
 /* wall time */
 double realtime(void)
 {
-	struct timeval t;
-	gettimeofday(&t, NULL);
-	t.tv_sec -= (2017 - 1970)*3600*24*365;
-	return (1. + (double)t.tv_usec + ((double)t.tv_sec*1000000.)) / 1000000.;
+        struct timeval t;
+        gettimeofday(&t, NULL);
+        t.tv_sec -= (2017 - 1970)*3600*24*365;
+        return (1. + (double)t.tv_usec + ((double)t.tv_sec*1000000.)) / 1000000.;
+}
+
+int save_matrices = 0;
+
+void dump_dense_matrix_cf32(cf32_t **mat, len_t nrows, len_t ncols)
+{
+    if (!save_matrices || !mat)
+        return;
+
+    mkdir("matrix_archive", 0755);
+
+    unsigned int id = (unsigned int)(rand() & 0xFFFFFF);
+    char fname[256];
+    snprintf(fname, sizeof(fname), "matrix_archive/%lu_%lu_%06x.smat",
+             (unsigned long)nrows, (unsigned long)ncols, id);
+
+    FILE *f = fopen(fname, "w");
+    if (!f)
+        return;
+
+    size_t nnz = 0;
+    for (len_t i = 0; i < nrows; ++i) {
+        if (!mat[i])
+            continue;
+        for (len_t j = 0; j < ncols; ++j) {
+            if (mat[i][j] != 0)
+                nnz++;
+        }
+    }
+
+    fprintf(f, "%lu %lu %lu\n", (unsigned long)nrows, (unsigned long)ncols,
+            (unsigned long)nnz);
+    for (len_t i = 0; i < nrows; ++i) {
+        if (!mat[i])
+            continue;
+        for (len_t j = 0; j < ncols; ++j) {
+            if (mat[i][j] != 0) {
+                fprintf(f, "%lu %lu %u\n", (unsigned long)i, (unsigned long)j,
+                        (unsigned)mat[i][j]);
+            }
+        }
+    }
+    fclose(f);
 }
 
 static void construct_trace(
