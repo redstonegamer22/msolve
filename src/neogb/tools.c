@@ -59,27 +59,144 @@ void dump_dense_matrix_cf32(cf32_t **mat, len_t nrows, len_t ncols, int reduced)
         return;
 
     size_t nnz = 0;
-    for (len_t i = 0; i < nrows; ++i) {
-        if (!mat[i])
-            continue;
-        for (len_t j = 0; j < ncols; ++j) {
-            if (mat[i][j] != 0)
-                nnz++;
+    if (!reduced) {
+        for (len_t i = 0; i < nrows; ++i) {
+            if (!mat[i])
+                continue;
+            for (len_t j = 0; j < ncols; ++j) {
+                if (mat[i][j] != 0)
+                    nnz++;
+            }
+        }
+    } else {
+        for (len_t idx = 0; idx < ncols; ++idx) {
+            len_t m = ncols - 1 - idx;
+            if (!mat[m])
+                continue;
+            len_t len = ncols - m;
+            for (len_t j = 0; j < len; ++j) {
+                if (mat[m][j] != 0)
+                    nnz++;
+            }
         }
     }
 
     fprintf(f, "%lu %lu %lu\n", (unsigned long)nrows, (unsigned long)ncols,
             (unsigned long)nnz);
-    for (len_t i = 0; i < nrows; ++i) {
-        if (!mat[i])
-            continue;
-        for (len_t j = 0; j < ncols; ++j) {
-            if (mat[i][j] != 0) {
-                fprintf(f, "%lu %lu %u\n", (unsigned long)i, (unsigned long)j,
-                        (unsigned)mat[i][j]);
+
+    if (!reduced) {
+        for (len_t i = 0; i < nrows; ++i) {
+            if (!mat[i])
+                continue;
+            for (len_t j = 0; j < ncols; ++j) {
+                if (mat[i][j] != 0) {
+                    fprintf(f, "%lu %lu %u\n", (unsigned long)i,
+                            (unsigned long)j, (unsigned)mat[i][j]);
+                }
+            }
+        }
+    } else {
+        len_t ridx = 0;
+        for (len_t idx = 0; idx < ncols; ++idx) {
+            len_t m = ncols - 1 - idx;
+            if (!mat[m])
+                continue;
+            len_t len = ncols - m;
+            for (len_t j = 0; j < len; ++j) {
+                if (mat[m][j] != 0) {
+                    fprintf(f, "%lu %lu %u\n", (unsigned long)ridx,
+                            (unsigned long)(m + j), (unsigned)mat[m][j]);
+                }
+            }
+            ridx++;
+        }
+    }
+
+    fclose(f);
+}
+
+void dump_sparse_matrix_cf32(mat_t *mat, const bs_t *tbr, const bs_t *bs,
+                             int reduced)
+{
+    if (!save_matrices)
+        return;
+
+    mkdir("matrix_archive", 0755);
+
+    unsigned int id = (unsigned int)(rand() & 0xFFFFFF);
+    len_t ncols = mat->nc;
+    len_t nrows = reduced ? mat->np : mat->nru + mat->nrl;
+
+    char fname[256];
+    snprintf(fname, sizeof(fname), "matrix_archive/%s%lu_%lu_%06x.smat",
+             reduced ? "rref_" : "unrref_",
+             (unsigned long)nrows, (unsigned long)ncols, id);
+
+    FILE *f = fopen(fname, "w");
+    if (!f)
+        return;
+
+    size_t nnz = 0;
+    if (!reduced) {
+        for (len_t i = 0; i < mat->nru; ++i) {
+            if (mat->rr[i])
+                nnz += mat->rr[i][LENGTH];
+        }
+        for (len_t i = 0; i < mat->nrl; ++i) {
+            if (mat->tr[i])
+                nnz += mat->tr[i][LENGTH];
+        }
+    } else {
+        for (len_t i = 0; i < mat->np; ++i) {
+            if (mat->tr[i])
+                nnz += mat->tr[i][LENGTH];
+        }
+    }
+
+    fprintf(f, "%lu %lu %lu\n", (unsigned long)nrows, (unsigned long)ncols,
+            (unsigned long)nnz);
+
+    if (!reduced) {
+        len_t idx = 0;
+        for (len_t i = 0; i < mat->nru; ++i, ++idx) {
+            hm_t *row = mat->rr[i];
+            if (!row)
+                continue;
+            cf32_t *cfs = bs->cf_32[row[COEFFS]];
+            len_t len = row[LENGTH];
+            hm_t *cols = row + OFFSET;
+            for (len_t j = 0; j < len; ++j) {
+                fprintf(f, "%lu %lu %u\n", (unsigned long)idx,
+                        (unsigned long)cols[j], (unsigned)cfs[j]);
+            }
+        }
+        for (len_t i = 0; i < mat->nrl; ++i, ++idx) {
+            hm_t *row = mat->tr[i];
+            if (!row)
+                continue;
+            cf32_t *cfs = tbr->cf_32[row[COEFFS]];
+            len_t len = row[LENGTH];
+            hm_t *cols = row + OFFSET;
+            for (len_t j = 0; j < len; ++j) {
+                fprintf(f, "%lu %lu %u\n", (unsigned long)idx,
+                        (unsigned long)cols[j], (unsigned)cfs[j]);
+            }
+        }
+    } else {
+        for (len_t i = 0; i < mat->np; ++i) {
+            hm_t *row = mat->tr[i];
+            if (!row)
+                continue;
+            cf32_t *cfs = mat->cf_32[row[COEFFS]];
+            len_t len = row[LENGTH];
+            hm_t *cols = row + OFFSET;
+            for (len_t j = 0; j < len; ++j) {
+                fprintf(f, "%lu %lu %u\n", (unsigned long)i,
+                        (unsigned long)cols[j], (unsigned)cfs[j]);
             }
         }
     }
+
     fclose(f);
 }
 

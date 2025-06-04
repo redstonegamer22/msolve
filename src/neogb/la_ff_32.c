@@ -3915,7 +3915,9 @@ static void probabilistic_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32 = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, tbr, bs, 0);
     probabilistic_sparse_reduced_echelon_form_ff_32(mat, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();
@@ -3974,7 +3976,9 @@ static void exact_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32  = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, tbr, bs, 0);
     exact_sparse_reduced_echelon_form_ff_32(mat, tbr, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();
@@ -4055,7 +4059,9 @@ static int exact_application_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32 = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, NULL, bs, 0);
     ret = exact_application_sparse_reduced_echelon_form_ff_32(mat, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();
@@ -4088,7 +4094,9 @@ static void exact_trace_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32  = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, NULL, bs, 0);
     exact_trace_sparse_reduced_echelon_form_ff_32(trace, mat, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();

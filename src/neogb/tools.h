@@ -42,6 +42,12 @@ void dump_dense_matrix_cf32(
     len_t ncols,
     int reduced
     );
+void dump_sparse_matrix_cf32(
+    mat_t *mat,
+    const bs_t *tbr,
+    const bs_t *bs,
+    int reduced
+    );
 
 static inline uint8_t mod_p_inverse_8(
         const int16_t val,
