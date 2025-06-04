@@ -19,6 +19,8 @@
  * Mohab Safey El Din */
 
 #include "libmsolve.c"
+#include "../neogb/tools.h"
+#include <time.h>
 
 #define DEBUGGB 0
 #define DEBUGBUILDMATRIX 0
@@ -145,6 +147,7 @@ static inline void display_help(char *str){
   fprintf(stdout, "         hash table is newly generated.\n");
   fprintf(stdout, "         Default: 0, i.e. no update.\n");
   fprintf(stdout, "-V       Prints msolve's version\n");
+  fprintf(stdout, "-x       Archive F4 matrices before and after row reduction\n");
 }
 
 static void getoptions(
@@ -181,7 +184,7 @@ static void getoptions(
   char *out_fname = NULL;
   char *bin_out_fname = NULL;
   opterr = 1;
-  char options[] = "hf:N:F:v:l:t:e:o:O:u:iI:p:P:L:q:g:c:s:SCr:R:m:M:n:d:Vf:";
+  char options[] = "hf:N:F:v:l:t:e:o:O:u:iI:p:P:L:q:g:c:s:SCr:R:m:M:n:d:Vf:x";
   while((opt = getopt(argc, argv, options)) != -1) {
     switch(opt) {
     case 'N':
@@ -318,6 +321,9 @@ static void getoptions(
           *normal_form_matrix  = 0;
       }
       break;
+    case 'x':
+      save_matrices = 1;
+      break;
     default:
       errflag++;
       break;
@@ -385,6 +391,11 @@ int main(int argc, char **argv){
                &reduce_gb, &print_gb, &truncate_lifting, &genericity_handling, &unstable_staircase, &saturate, &colon,
                &normal_form, &normal_form_matrix, &is_gb, &lift_matrix, &get_param,
                &precision, &refine, &isolate, &generate_pbm, &info_level, files);
+
+    srand(time(0));
+    if (save_matrices && info_level > 1) {
+        fprintf(stderr, "Matrix archiving enabled.\n");
+    }
 
     FILE *fh  = fopen(files->in_file, "r");
     FILE *bfh  = fopen(files->bin_file, "r");
