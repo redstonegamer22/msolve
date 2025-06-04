@@ -451,15 +451,13 @@ int main(int argc, char **argv){
     gens->elim = elim_block_len;
 
     if (save_matrices) {
-        if (!is_prime32(field_char) || field_char > 0x7fffffff) {
+        if (field_char == 0) {
             save_matrices = 0;
-        } else {
-            if (la_option != 1) {
-                if (info_level > 0) {
-                    fprintf(stderr, "-x forces linear algebra option 1 for matrix archiving\n");
-                }
-                la_option = 1;
+        } else if (la_option != 1) {
+            if (info_level > 0) {
+                fprintf(stderr, "-x forces linear algebra option 1 for matrix archiving\n");
             }
+            la_option = 1;
         }
     }
 
