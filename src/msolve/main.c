@@ -19,10 +19,22 @@
  * Mohab Safey El Din */
 
 #include "libmsolve.c"
+#include "../neogb/tools.h"
+#include <time.h>
+#include <stdint.h>
 
 #define DEBUGGB 0
 #define DEBUGBUILDMATRIX 0
 #define IO_DEBUG 0
+
+static int is_prime32(uint32_t p) {
+    if (p < 2) return 0;
+    if (p % 2 == 0) return p == 2;
+    for (uint32_t i = 3; i * (uint64_t)i <= p; i += 2) {
+        if (p % i == 0) return 0;
+    }
+    return 1;
+}
 
 static inline void display_help(char *str){
   fprintf(stdout, "\nmsolve library for polynomial system solving, version %s\n", VERSION);
@@ -145,6 +157,7 @@ static inline void display_help(char *str){
   fprintf(stdout, "         hash table is newly generated.\n");
   fprintf(stdout, "         Default: 0, i.e. no update.\n");
   fprintf(stdout, "-V       Prints msolve's version\n");
+  fprintf(stdout, "-x       Archive F4 matrices before and after row reduction\n");
 }
 
 static void getoptions(
@@ -181,7 +194,7 @@ static void getoptions(
   char *out_fname = NULL;
   char *bin_out_fname = NULL;
   opterr = 1;
-  char options[] = "hf:N:F:v:l:t:e:o:O:u:iI:p:P:L:q:g:c:s:SCr:R:m:M:n:d:Vf:";
+  char options[] = "hf:N:F:v:l:t:e:o:O:u:iI:p:P:L:q:g:c:s:SCr:R:m:M:n:d:Vf:x";
   while((opt = getopt(argc, argv, options)) != -1) {
     switch(opt) {
     case 'N':
@@ -318,6 +331,9 @@ static void getoptions(
           *normal_form_matrix  = 0;
       }
       break;
+    case 'x':
+      save_matrices = 1;
+      break;
     default:
       errflag++;
       break;
@@ -386,6 +402,11 @@ int main(int argc, char **argv){
                &normal_form, &normal_form_matrix, &is_gb, &lift_matrix, &get_param,
                &precision, &refine, &isolate, &generate_pbm, &info_level, files);
 
+    srand(time(0));
+    if (save_matrices && info_level > 1) {
+        fprintf(stderr, "Matrix archiving enabled.\n");
+    }
+
     FILE *fh  = fopen(files->in_file, "r");
     FILE *bfh  = fopen(files->bin_file, "r");
 
@@ -428,6 +449,19 @@ int main(int argc, char **argv){
     gens->rand_linear           = 0;
     gens->random_linear_form = malloc(sizeof(int32_t)*(nr_vars));
     gens->elim = elim_block_len;
+
+    if (save_matrices) {
+        if (!is_prime32(field_char) || field_char > 0x7fffffff) {
+            save_matrices = 0;
+        } else {
+            if (la_option != 1) {
+                if (info_level > 0) {
+                    fprintf(stderr, "-x forces linear algebra option 1 for matrix archiving\n");
+                }
+                la_option = 1;
+            }
+        }
+    }
 
     if(0 < field_char && field_char < pow(2, 15) && la_option > 2){
         if(info_level){
