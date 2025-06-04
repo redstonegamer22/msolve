@@ -440,6 +440,17 @@ int main(int argc, char **argv){
     gens->random_linear_form = malloc(sizeof(int32_t)*(nr_vars));
     gens->elim = elim_block_len;
 
+    if (save_matrices) {
+        if (field_char == 0) {
+            save_matrices = 0;
+        } else if (la_option != 1) {
+            if (info_level > 0) {
+                fprintf(stderr, "-x forces linear algebra option 1 for matrix archiving\n");
+            }
+            la_option = 1;
+        }
+    }
+
     if(0 < field_char && field_char < pow(2, 15) && la_option > 2){
         if(info_level){
             fprintf(stderr, "Warning: characteristic is too low for choosing \nprobabilistic linear algebra\n");
