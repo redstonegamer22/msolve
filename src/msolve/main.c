@@ -21,10 +21,20 @@
 #include "libmsolve.c"
 #include "../neogb/tools.h"
 #include <time.h>
+#include <stdint.h>
 
 #define DEBUGGB 0
 #define DEBUGBUILDMATRIX 0
 #define IO_DEBUG 0
+
+static int is_prime32(uint32_t p) {
+    if (p < 2) return 0;
+    if (p % 2 == 0) return p == 2;
+    for (uint32_t i = 3; i * (uint64_t)i <= p; i += 2) {
+        if (p % i == 0) return 0;
+    }
+    return 1;
+}
 
 static inline void display_help(char *str){
   fprintf(stdout, "\nmsolve library for polynomial system solving, version %s\n", VERSION);

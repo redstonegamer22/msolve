@@ -41,7 +41,7 @@ double realtime(void)
 
 int save_matrices = 0;
 
-void dump_dense_matrix_cf32(cf32_t **mat, len_t nrows, len_t ncols)
+void dump_dense_matrix_cf32(cf32_t **mat, len_t nrows, len_t ncols, int reduced)
 {
     if (!save_matrices || !mat)
         return;
@@ -50,7 +50,8 @@ void dump_dense_matrix_cf32(cf32_t **mat, len_t nrows, len_t ncols)
 
     unsigned int id = (unsigned int)(rand() & 0xFFFFFF);
     char fname[256];
-    snprintf(fname, sizeof(fname), "matrix_archive/%lu_%lu_%06x.smat",
+    snprintf(fname, sizeof(fname), "matrix_archive/%s%lu_%lu_%06x.smat",
+             reduced ? "rref_" : "unrref_",
              (unsigned long)nrows, (unsigned long)ncols, id);
 
     FILE *f = fopen(fname, "w");

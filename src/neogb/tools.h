@@ -39,7 +39,8 @@ extern int save_matrices;
 void dump_dense_matrix_cf32(
     cf32_t **mat,
     len_t nrows,
-    len_t ncols
+    len_t ncols,
+    int reduced
     );
 
 static inline uint8_t mod_p_inverse_8(
