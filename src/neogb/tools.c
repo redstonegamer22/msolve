@@ -139,10 +139,6 @@ void dump_sparse_matrix_cf32(mat_t *mat, const bs_t *tbr, const bs_t *bs,
     char ts[32];
     snprintf(ts, sizeof(ts), "%02d_%02d_%02d.%03ld",
              tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec / 1000);
-    len_t ncols = mat->nc;
-    len_t nrows = reduced ? mat->np : mat->nru + mat->nrl;
-
-    char fname[256];
     snprintf(fname, sizeof(fname),
              "matrix_archive/%s%lu_%lu_%s_%06x.smat",
              reduced ? "rref_" : "unrref_",
