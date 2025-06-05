@@ -19,6 +19,7 @@
  * Mohab Safey El Din */
 
 #include "data.h"
+#include "tools.h"
 
 /* That's also enough if AVX512 is avaialable on the system */
 #if defined HAVE_AVX2
@@ -3914,7 +3915,9 @@ static void probabilistic_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32 = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, tbr, bs, 0);
     probabilistic_sparse_reduced_echelon_form_ff_32(mat, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();
@@ -3973,7 +3976,9 @@ static void exact_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32  = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, tbr, bs, 0);
     exact_sparse_reduced_echelon_form_ff_32(mat, tbr, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();
@@ -4054,7 +4059,9 @@ static int exact_application_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32 = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, NULL, bs, 0);
     ret = exact_application_sparse_reduced_echelon_form_ff_32(mat, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();
@@ -4087,7 +4094,9 @@ static void exact_trace_sparse_linear_algebra_ff_32(
      * coefficients of all pivot rows */
     mat->cf_32  = realloc(mat->cf_32,
             (unsigned long)mat->nr * sizeof(cf32_t *));
+    dump_sparse_matrix_cf32(mat, NULL, bs, 0);
     exact_trace_sparse_reduced_echelon_form_ff_32(trace, mat, bs, st);
+    dump_sparse_matrix_cf32(mat, NULL, NULL, 1);
 
     /* timings */
     ct1 = cputime();
@@ -4121,9 +4130,11 @@ static void exact_sparse_dense_linear_algebra_ff_32(
     /* generate updated dense D part via reduction of CD with AB */
     cf32_t **dm;
     dm  = sparse_AB_CD_linear_algebra_ff_32(mat, bs, st);
+    dump_dense_matrix_cf32(dm, mat->np, ncr, 0);
     if (mat->np > 0) {
         dm  = exact_dense_linear_algebra_ff_32(dm, mat, st);
         dm  = interreduce_dense_matrix_ff_32(dm, ncr, st->fc);
+        dump_dense_matrix_cf32(dm, mat->np, ncr, 1);
     }
 
     /* convert dense matrix back to sparse matrix representation,
@@ -4171,9 +4182,11 @@ static void probabilistic_sparse_dense_linear_algebra_ff_32_2(
     /* generate updated dense D part via reduction of CD with AB */
     cf32_t **dm;
     dm  = sparse_AB_CD_linear_algebra_ff_32(mat, bs, st);
+    dump_dense_matrix_cf32(dm, mat->np, ncr, 0);
     if (mat->np > 0) {
         dm  = probabilistic_dense_linear_algebra_ff_32(dm, mat, st);
         dm  = interreduce_dense_matrix_ff_32(dm, mat->ncr, st->fc);
+        dump_dense_matrix_cf32(dm, mat->np, ncr, 1);
     }
 
     /* convert dense matrix back to sparse matrix representation,
@@ -4222,7 +4235,9 @@ static void probabilistic_sparse_dense_linear_algebra_ff_32(
     cf32_t **dm = NULL;
     mat->np = 0;
     dm      = probabilistic_sparse_dense_echelon_form_ff_32(mat, bs, st);
+    dump_dense_matrix_cf32(dm, mat->np, ncr, 0);
     dm      = interreduce_dense_matrix_ff_32(dm, mat->ncr, st->fc);
+    dump_dense_matrix_cf32(dm, mat->np, ncr, 1);
 
     /* convert dense matrix back to sparse matrix representation,
      * use tmpcf for storing the coefficient arrays */
