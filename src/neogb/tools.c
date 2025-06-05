@@ -49,10 +49,18 @@ void dump_dense_matrix_cf32(cf32_t **mat, len_t nrows, len_t ncols, int reduced)
     mkdir("matrix_archive", 0755);
 
     unsigned int id = (unsigned int)(rand() & 0xFFFFFF);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    struct tm tm;
+    localtime_r(&tv.tv_sec, &tm);
+    char ts[32];
+    snprintf(ts, sizeof(ts), "%02d_%02d_%02d.%03ld",
+             tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec / 1000);
     char fname[256];
-    snprintf(fname, sizeof(fname), "matrix_archive/%s%lu_%lu_%06x.smat",
+    snprintf(fname, sizeof(fname),
+             "matrix_archive/%s%lu_%lu_%s_%06x.smat",
              reduced ? "rref_" : "unrref_",
-             (unsigned long)nrows, (unsigned long)ncols, id);
+             (unsigned long)nrows, (unsigned long)ncols, ts, id);
 
     FILE *f = fopen(fname, "w");
     if (!f)
@@ -124,13 +132,17 @@ void dump_sparse_matrix_cf32(mat_t *mat, const bs_t *tbr, const bs_t *bs,
     mkdir("matrix_archive", 0755);
 
     unsigned int id = (unsigned int)(rand() & 0xFFFFFF);
-    len_t ncols = mat->nc;
-    len_t nrows = reduced ? mat->np : mat->nru + mat->nrl;
-
-    char fname[256];
-    snprintf(fname, sizeof(fname), "matrix_archive/%s%lu_%lu_%06x.smat",
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    struct tm tm;
+    localtime_r(&tv.tv_sec, &tm);
+    char ts[32];
+    snprintf(ts, sizeof(ts), "%02d_%02d_%02d.%03ld",
+             tm.tm_hour, tm.tm_min, tm.tm_sec, tv.tv_usec / 1000);
+    snprintf(fname, sizeof(fname),
+             "matrix_archive/%s%lu_%lu_%s_%06x.smat",
              reduced ? "rref_" : "unrref_",
-             (unsigned long)nrows, (unsigned long)ncols, id);
+             (unsigned long)nrows, (unsigned long)ncols, ts, id);
 
     FILE *f = fopen(fname, "w");
     if (!f)
